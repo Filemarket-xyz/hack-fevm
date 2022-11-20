@@ -9,7 +9,6 @@ use fvm_sdk as sdk;
 use fvm_sdk::NO_DATA_BLOCK_ID;
 use fvm_shared::ActorID;
 use fvm_shared;
-use fvm_shared::METHOD_SEND;
 use fvm_shared::econ::TokenAmount;
 use fvm_shared::address::Address;
 
@@ -139,14 +138,13 @@ pub fn buy_file(params: u32) -> Option<RawBytes> {
     let params = RawBytes::new(params);
     let params: BuyParams = params.deserialize().unwrap();
 
-    let receiver = sdk::message::receiver();
     let caller = sdk::message::caller();
-    let address = Address::new_id(receiver);
+    let address = Address::new_id(100);
     let send_params = RawBytes::default();
 
     let _receipt = fvm_sdk::send::send(
         &address,
-        METHOD_SEND,
+        2,
         send_params,
         state.cost.clone(),
     ).unwrap();
@@ -187,6 +185,12 @@ fn share_access(params: u32) -> Option<RawBytes> {
     None
 }
 
+#[derive(Serialize_tuple, Deserialize_tuple, Clone)]
+struct WithdrawParams {
+    provider_or_client: Address,
+    amount: TokenAmount
+}
+
 fn finish_sale() -> Option<RawBytes> {
     let mut state = State::load();
 
@@ -201,12 +205,19 @@ fn finish_sale() -> Option<RawBytes> {
         abort!(USR_FORBIDDEN, "Only consumer may finish sale");
     }
 
-    let send_params = RawBytes::default();
+    let send_params = WithdrawParams {
+        provider_or_client: state.seller,
+        amount: state.cost.clone()
+    };
+    let send_params = RawBytes::serialize(send_params).unwrap();
+
+    let market_address = Address::new_id(100);
+
     let _receipt = fvm_sdk::send::send(
-        &state.seller,
-        METHOD_SEND,
+        &market_address,
+        3,
         send_params,
-        state.cost.clone(),
+        TokenAmount::from_atto(0)
     ).unwrap();
 
     state.is_finished = true;
