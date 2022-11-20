@@ -1,6 +1,9 @@
 mod blockstore;
+mod crypto;
 
 use crate::blockstore::Blockstore;
+use crate::crypto::{EncriptedFileContent, EncriptedPassword, SalePrivateKey, SalePublicKey};
+
 use cid::multihash::Code;
 use cid::Cid;
 use fvm_ipld_encoding::tuple::{Deserialize_tuple, Serialize_tuple};
@@ -11,8 +14,6 @@ use fvm_shared::ActorID;
 use fvm_shared;
 use fvm_shared::econ::TokenAmount;
 use fvm_shared::address::Address;
-
-type PubKey = u64;
 
 macro_rules! abort {
     ($code:ident, $msg:literal $(, $ex:expr)*) => {
@@ -28,10 +29,10 @@ pub struct State {
     pub seller: Address,
     pub consumer: Option<Address>,
     pub word: String,
-    pub ciphered_file_content: String,
+    pub ciphered_file_content: EncriptedFileContent,
     pub cost: TokenAmount,
-    pub consumer_pub: Option<PubKey>,
-    pub ciphered_encoding_key: Option<String>,
+    pub consumer_pub: Option<SalePublicKey>,
+    pub ciphered_encoding_key: Option<EncriptedPassword>,
     pub is_finished: bool
 }
 
@@ -76,6 +77,7 @@ pub fn invoke(params: u32) -> u32 {
         2 => buy_file(params),
         3 => share_access(params),
         4 => finish_sale(),
+        5 => complain(params),
         _ => abort!(USR_UNHANDLED_MESSAGE, "unrecognized method"),
     };
 
@@ -92,7 +94,7 @@ pub fn invoke(params: u32) -> u32 {
 struct InitialParams {
     pub seller: Address,
     pub word: String,
-    pub ciphered_file_content: String,
+    pub ciphered_file_content: EncriptedFileContent,
     pub cost: TokenAmount
 }
 
@@ -124,7 +126,7 @@ pub fn constructor(params: u32) -> Option<RawBytes> {
 
 #[derive(Debug, Deserialize_tuple)]
 struct BuyParams {
-    pub consumer_pub: PubKey
+    pub consumer_pub: SalePublicKey
 }
 
 pub fn buy_file(params: u32) -> Option<RawBytes> {
@@ -158,7 +160,7 @@ pub fn buy_file(params: u32) -> Option<RawBytes> {
 
 #[derive(Debug, Deserialize_tuple)]
 struct ShareParams {
-    pub ciphered_encoding_key: String
+    pub ciphered_encoding_key: EncriptedPassword
 }
 
 fn share_access(params: u32) -> Option<RawBytes> {
@@ -189,6 +191,55 @@ fn share_access(params: u32) -> Option<RawBytes> {
 struct WithdrawParams {
     provider_or_client: Address,
     amount: TokenAmount
+}
+
+#[derive(Debug, Deserialize_tuple)]
+struct ComplainParams {
+    pub user_priv_key: SalePrivateKey
+}
+
+fn complain(params: u32) -> Option<RawBytes> {
+    let mut state = State::load();
+
+    let params = sdk::message::params_raw(params).unwrap().1;
+    let params = RawBytes::new(params);
+    let params: ComplainParams = params.deserialize().unwrap();
+    
+    let encoded_password = state.ciphered_encoding_key.as_ref().unwrap();
+
+    let consumer_pub = state.consumer_pub.as_ref().unwrap();
+    let file_content_result = crypto::decript(
+        &params.user_priv_key,
+        &consumer_pub,
+        &encoded_password,
+        state.ciphered_file_content.clone()
+    );
+
+    if let Ok(file_content) = file_content_result {
+        if file_content.contains(&state.word) {
+            return  None;
+        }   
+    }
+
+    let send_params = WithdrawParams {
+        provider_or_client: state.consumer.unwrap(),
+        amount: state.cost.clone()
+    };
+    let send_params = RawBytes::serialize(send_params).unwrap();
+
+    let market_address = Address::new_id(100);
+
+    let _receipt = fvm_sdk::send::send(
+        &market_address,
+        3,
+        send_params,
+        TokenAmount::from_atto(0)
+    ).unwrap();
+
+    state.is_finished = true;
+
+    state.save();
+    None
 }
 
 fn finish_sale() -> Option<RawBytes> {
