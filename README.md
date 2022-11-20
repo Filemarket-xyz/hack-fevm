@@ -2,8 +2,10 @@
 ## FVM developers important notes
 For better developer experience with FVM such tips might be useful:
 1. Working version of FVM exists at commit 1a06485a8c0463ea6a7a0604d0ad421bdcc2c953 in experimental/fvm-m2 branch of lotus repository
-2. While using local network with default parameters there is huge delay between status Active and deal creation. This can be solved with proper miner config - [reference config](./miner-config.toml)
-3. [Great entrypoint for native FVM actors which can be used to kickstart development](https://coinsbench.com/fvm-fvm-create-miner-with-smart-contract-native-actor-and-part-1-9a5d03b41c31)
+2. While using local network with default parameters there is huge delay between status Active and deal creation. This can be solved with proper miner config - [reference config](./miner-config.toml).
+However, this config should be used after deal creation, because if it is used from start, deal creation will fail(
+3. To reduce deal publish time lotus command `lotus-miner storage-deals pending-publish --publish-now` can be used
+4. [Great entrypoint for native FVM actors which can be used to kickstart development](https://coinsbench.com/fvm-fvm-create-miner-with-smart-contract-native-actor-and-part-1-9a5d03b41c31)
 ## Native actor examples
 Actor code is placed in [simple-actor](./simple-actor) directory
 
@@ -62,8 +64,8 @@ HARDHAT_NETWORK=wallaby ts-node scripts/create-collection.ts --instance {address
 ```
 
 ### Example instances in Wallaby
-* Collection instance for cloning - [0x173A9B63CA6BBD8Dbc6241e32Bd20a0cc7b34a9A](https://explorer.glif.io/address/0x173a9b63ca6bbd8dbc6241e32bd20a0cc7b34a9a/?network=wallabynet). Deploy cid - [bafy2bzacecnblpjymmhonthp4odo5t3dgnurnhoppomwiqbvjj2izvx7qlel6](https://explorer.glif.io/tx/bafy2bzacecnblpjymmhonthp4odo5t3dgnurnhoppomwiqbvjj2izvx7qlel6/?network=wallabynet)
-* Fraud decider instance - [0x5e23161443792d15728d82146dc86ec34ec803a2](https://explorer.glif.io/address/0x5e23161443792d15728d82146dc86ec34ec803a2/?network=wallabynet). Deploy cid - [bafy2bzacecawnrecqwsl7uzwyv6nha57ubwblvmij26un2jlw56zpgixlxnc6](https://explorer.glif.io/tx/bafy2bzacecawnrecqwsl7uzwyv6nha57ubwblvmij26un2jlw56zpgixlxnc6/?network=wallabynet)
-* Access token instance - [0xa784559FEB900D932BCcB3230565aCe5B2511503](https://explorer.glif.io/address/0xa784559feb900d932bccb3230565ace5b2511503/?network=wallabynet). Deploy cid - [bafy2bzacedlpkeezo4ojqxb4f4q3xqtbn5lx7mw4c4boddiqui3cbgswj6jow](https://explorer.glif.io/tx/bafy2bzacedlpkeezo4ojqxb4f4q3xqtbn5lx7mw4c4boddiqui3cbgswj6jow/?network=wallabynet)
-* Exchange instance - [0x232eaA6673E9cF2639Bc7aE85040B33E03064808](https://explorer.glif.io/address/0x232eaa6673e9cf2639bc7ae85040b33e03064808/?network=wallabynet). Deploy cid - [bafy2bzaceauqfkkw6x7r5kyd6tv24nb43y7wsboyzkacsneyehbcrnl4rkzk6](https://explorer.glif.io/tx/bafy2bzaceauqfkkw6x7r5kyd6tv24nb43y7wsboyzkacsneyehbcrnl4rkzk6/?network=wallabynet)
-* Created collection - [0x12D74ad3a2cFeB6E5ab47aEd2cAff0192337c6c9](https://explorer.glif.io/address/0x12D74ad3a2cFeB6E5ab47aEd2cAff0192337c6c9/?network=wallabynet). Clone cid - []()
+* Collection instance for cloning - [0xf2f1500e39c25b8fa8c6663a6d8510b315f40c21](). Deploy cid - [bafy2bzacebjxsrrb22viny7b3vjkfsto2lpculjbuz7vutveu7jjkw5obxog2]()
+* Fraud decider instance - [0x86c9c461e00fcbee97066a12e565bd69abe4c4cf](). Deploy cid - [bafy2bzacecuurqqwbmzzl76uoppllt5c5dc2gxjyatsmz57j3rfgkfga3tacw]()
+* Access token instance - [0xa02f7bb288500b7d900dd0ed2317ec125555f6fc](). Deploy cid - [bafy2bzaceciluvjev6d23yzqcy6fkmhp3j22qmcti64ipifxok3x6igq2pgu4]()
+* Exchange instance - [0x39ce94751e608e8785cf07ab6c044b5acecda4cb](). Deploy cid - [bafy2bzaceai4bx2dvnjd4xa5fmy262nifvutggdgvp5hebnym7z6lcvi23se4]()
+* Created collection - [](). Clone cid - [bafy2bzacedjkgmwqzjmynypz7qhjc4i26n7e5v3rgujxjvvmiywluxql4xyf4]()
