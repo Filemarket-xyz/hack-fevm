@@ -32,7 +32,8 @@ pub struct State {
     pub ciphered_file_content: String,
     pub cost: TokenAmount,
     pub consumer_pub: Option<PubKey>,
-    pub ciphered_encoding_key: Option<String>
+    pub ciphered_encoding_key: Option<String>,
+    pub is_finished: bool
 }
 
 impl State {
@@ -74,6 +75,8 @@ pub fn invoke(params: u32) -> u32 {
     let ret: Option<RawBytes> = match sdk::message::method_number() {
         1 => constructor(params),
         2 => buy_file(params),
+        3 => share_access(params),
+        4 => finish_sale(),
         _ => abort!(USR_UNHANDLED_MESSAGE, "unrecognized method"),
     };
 
@@ -94,7 +97,6 @@ struct InitialParams {
     pub cost: TokenAmount
 }
 
-
 pub fn constructor(params: u32) -> Option<RawBytes> {
     const INIT_ACTOR_ADDR: ActorID = 1;
 
@@ -113,7 +115,8 @@ pub fn constructor(params: u32) -> Option<RawBytes> {
         ciphered_file_content: params.ciphered_file_content,
         cost: params.cost,
         consumer_pub: None,
-        ciphered_encoding_key: None
+        ciphered_encoding_key: None,
+        is_finished: false
     };
 
     state.save();
@@ -155,3 +158,59 @@ pub fn buy_file(params: u32) -> Option<RawBytes> {
     None
 }
 
+#[derive(Debug, Deserialize_tuple)]
+struct ShareParams {
+    pub ciphered_encoding_key: String
+}
+
+fn share_access(params: u32) -> Option<RawBytes> {
+    let mut state = State::load();
+
+    let caller = sdk::message::caller();
+    let caller_address = Address::new_id(caller);
+
+    if caller_address != state.seller {
+        abort!(USR_FORBIDDEN, "Only owner may share access");
+    }
+
+    if state.consumer_pub.is_none() || state.ciphered_encoding_key.is_some() {
+        abort!(USR_FORBIDDEN, "Wrong state");
+    }
+
+    let params = sdk::message::params_raw(params).unwrap().1;
+    let params = RawBytes::new(params);
+    let params: ShareParams = params.deserialize().unwrap();
+
+    state.ciphered_encoding_key = Some(params.ciphered_encoding_key);
+
+    state.save();
+    None
+}
+
+fn finish_sale() -> Option<RawBytes> {
+    let mut state = State::load();
+
+    if state.ciphered_encoding_key.is_none() {
+        abort!(USR_FORBIDDEN, "Wrong state");
+    }
+
+    let caller = sdk::message::caller();
+    let caller_address = Address::new_id(caller);
+
+    if caller_address != state.consumer.unwrap() {
+        abort!(USR_FORBIDDEN, "Only consumer may finish sale");
+    }
+
+    let send_params = RawBytes::default();
+    let _receipt = fvm_sdk::send::send(
+        &state.seller,
+        METHOD_SEND,
+        send_params,
+        state.cost.clone(),
+    ).unwrap();
+
+    state.is_finished = true;
+
+    state.save();
+    None
+}

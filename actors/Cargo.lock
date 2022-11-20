@@ -2962,28 +2962,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d86a8dc7f45e4c1b0d30e43038c38f274e77af056aa5f74b93c2cf9eb3c1c836"
 
 [[package]]
-name = "validator"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cid",
- "fvm",
- "fvm_ipld_blockstore",
- "fvm_ipld_encoding",
- "fvm_ipld_hamt",
- "fvm_sdk",
- "fvm_shared",
- "libsecp256k1",
- "multihash",
- "rand",
- "rand_chacha",
- "serde",
- "serde_tuple",
- "wasm-builder",
- "wasmtime",
-]
-
-[[package]]
 name = "version_check"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
