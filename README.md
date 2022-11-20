@@ -28,6 +28,12 @@ lotus chain create-actor ${cid obtained from previous step} ${constructor params
 ```
 
 Constructor or invoke params are base64 encoded raw bytes(fvm encoding). They can obtained with [serialization helper](./serialization-helper) package.
+## Interaction backend
+There is a [backend](./simple-interaction) for showing FVM abilities to work with files.
+
+This backend calls lotus binary under the hood and implements two methods:
+1. Create actor (with installed actor)
+2. Invoke actor matches count method
 ## Deploy contracts
 ### Requirements
 First, you need to place your private key in file sol-contracts/.wallaby-key in hex format without 0x prefix.
