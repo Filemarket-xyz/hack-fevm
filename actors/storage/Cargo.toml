@@ -16,6 +16,7 @@ serde = { version = "1.0.136", features = ["derive"] }
 serde_tuple = "0.5"
 anyhow = "1.0.56"
 rsa = "0.7"
+aes-gcm = "0.10"
 
 [dev-dependencies]
 fvm = { git = "https://github.com/filecoin-project/ref-fvm.git" }
