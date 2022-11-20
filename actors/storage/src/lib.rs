@@ -9,9 +9,12 @@ use fvm_sdk as sdk;
 use fvm_sdk::NO_DATA_BLOCK_ID;
 use fvm_shared::ActorID;
 use fvm_shared;
+use fvm_shared::METHOD_SEND;
+use fvm_shared::econ::TokenAmount;
+use fvm_shared::address::Address;
 
-/// A macro to abort concisely.
-/// This should be part of the SDK as it's very handy.
+type PubKey = u64;
+
 macro_rules! abort {
     ($code:ident, $msg:literal $(, $ex:expr)*) => {
         fvm_sdk::vm::abort(
@@ -21,15 +24,17 @@ macro_rules! abort {
     };
 }
 
-/// The state object.
-#[derive(Serialize_tuple, Deserialize_tuple, Clone, Debug, Default)]
+#[derive(Serialize_tuple, Deserialize_tuple, Clone, Debug)]
 pub struct State {
-    pub count: u64,
+    pub seller: Address,
+    pub consumer: Option<Address>,
+    pub word: String,
+    pub ciphered_file_content: String,
+    pub cost: TokenAmount,
+    pub consumer_pub: Option<PubKey>,
+    pub ciphered_encoding_key: Option<String>
 }
 
-/// We should probably have a derive macro to mark an object as a state object,
-/// and have load and save methods automatically generated for them as part of a
-/// StateObject trait (i.e. impl StateObject for State).
 impl State {
     pub fn load() -> Self {
         // First, load the current state root.
@@ -63,26 +68,15 @@ impl State {
     }
 }
 
-/// The actor's WASM entrypoint. It takes the ID of the parameters block,
-/// and returns the ID of the return value block, or NO_DATA_BLOCK_ID if no
-/// return value.
-///
-/// Should probably have macros similar to the ones on fvm.filecoin.io snippets.
-/// Put all methods inside an impl struct and annotate it with a derive macro
-/// that handles state serde and dispatch.
 #[no_mangle]
 pub fn invoke(params: u32) -> u32 {
     // Conduct method dispatch. Handle input parameters and return data.
     let ret: Option<RawBytes> = match sdk::message::method_number() {
-        1 => constructor(),
-        2 => say_hello(),
-        3 => get_state_cid(),
-        4 => echo_raw_bytes(params),
+        1 => constructor(params),
+        2 => buy_file(params),
         _ => abort!(USR_UNHANDLED_MESSAGE, "unrecognized method"),
     };
 
-    // Insert the return data block if necessary, and return the correct
-    // block ID.
     match ret {
         None => NO_DATA_BLOCK_ID,
         Some(v) => match sdk::ipld::put_block(DAG_CBOR, v.bytes()) {
@@ -92,58 +86,72 @@ pub fn invoke(params: u32) -> u32 {
     }
 }
 
-pub fn constructor() -> Option<RawBytes> {
+#[derive(Debug, Deserialize_tuple)]
+struct InitialParams {
+    pub seller: Address,
+    pub word: String,
+    pub ciphered_file_content: String,
+    pub cost: TokenAmount
+}
+
+
+pub fn constructor(params: u32) -> Option<RawBytes> {
     const INIT_ACTOR_ADDR: ActorID = 1;
 
     if sdk::message::caller() != INIT_ACTOR_ADDR {
         abort!(USR_FORBIDDEN, "constructor invoked by non-init actor");
     }
 
-    let state = State::default();
+    let params = sdk::message::params_raw(params).unwrap().1;
+    let params = RawBytes::new(params);
+    let params: InitialParams = params.deserialize().unwrap();
+
+    let state = State {
+        seller: params.seller,
+        consumer: None,
+        word: params.word,
+        ciphered_file_content: params.ciphered_file_content,
+        cost: params.cost,
+        consumer_pub: None,
+        ciphered_encoding_key: None
+    };
+
     state.save();
     None
 }
 
-/// Method num 2.
-pub fn say_hello() -> Option<RawBytes> {
+#[derive(Debug, Deserialize_tuple)]
+struct BuyParams {
+    pub consumer_pub: PubKey
+}
+
+pub fn buy_file(params: u32) -> Option<RawBytes> {
     let mut state = State::load();
-    state.count += 1;
-    state.save();
 
-    let ret = to_vec(format!("Hello world #{}!", &state.count).as_str());
-    match ret {
-        Ok(ret) => Some(RawBytes::new(ret)),
-        Err(err) => {
-            abort!(
-                USR_ILLEGAL_STATE,
-                "failed to serialize return value: {:?}",
-                err
-            );
-        }
+    if let Some(_) = state.consumer_pub {
+        abort!(USR_FORBIDDEN, "File allready buyed");
     }
-}
 
-/// Method num 3.
-pub fn get_state_cid() -> Option<RawBytes> {
-    let state_cid = sdk::sself::root().unwrap();
-    Some(RawBytes::new(state_cid.to_bytes()))
-}
-
-/// Method num 4.
-pub fn echo_raw_bytes(params: u32) -> Option<RawBytes> {
     let params = sdk::message::params_raw(params).unwrap().1;
     let params = RawBytes::new(params);
+    let params: BuyParams = params.deserialize().unwrap();
 
-    let ret = to_vec(format!("Params {:?}", params).as_str());
+    let receiver = sdk::message::receiver();
+    let caller = sdk::message::caller();
+    let address = Address::new_id(receiver);
+    let send_params = RawBytes::default();
 
-    match ret {
-        Ok(ret) => Some(RawBytes::new(ret)),
-        Err(err) => {
-            abort!(
-                USR_ILLEGAL_STATE,
-                "failed to serialize return value: {:?}",
-                err
-            );
-        }
-    }
+    let _receipt = fvm_sdk::send::send(
+        &address,
+        METHOD_SEND,
+        send_params,
+        state.cost.clone(),
+    ).unwrap();
+
+    state.consumer_pub = Some(params.consumer_pub);
+    state.consumer = Some(Address::new_id(caller));
+
+    state.save();
+    None
 }
+

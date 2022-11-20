@@ -1287,28 +1287,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fvm_actor_example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "cid",
- "fvm",
- "fvm_ipld_blockstore",
- "fvm_ipld_encoding",
- "fvm_ipld_hamt",
- "fvm_sdk",
- "fvm_shared",
- "libsecp256k1",
- "multihash",
- "rand",
- "rand_chacha",
- "serde",
- "serde_tuple",
- "wasm-builder",
- "wasmtime",
-]
-
-[[package]]
 name = "fvm_ipld_amt"
 version = "0.5.0"
 source = "git+https://github.com/filecoin-project/ref-fvm.git#60bda23f603b55e45aea4c1d32575958363a0e70"
@@ -2669,6 +2647,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
+name = "storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cid",
+ "fvm",
+ "fvm_ipld_blockstore",
+ "fvm_ipld_encoding",
+ "fvm_ipld_hamt",
+ "fvm_sdk",
+ "fvm_shared",
+ "libsecp256k1",
+ "multihash",
+ "rand",
+ "rand_chacha",
+ "serde",
+ "serde_tuple",
+ "wasm-builder",
+ "wasmtime",
+]
+
+[[package]]
 name = "storage-proofs-core"
 version = "12.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2960,6 +2960,28 @@ name = "unsigned-varint"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d86a8dc7f45e4c1b0d30e43038c38f274e77af056aa5f74b93c2cf9eb3c1c836"
+
+[[package]]
+name = "validator"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cid",
+ "fvm",
+ "fvm_ipld_blockstore",
+ "fvm_ipld_encoding",
+ "fvm_ipld_hamt",
+ "fvm_sdk",
+ "fvm_shared",
+ "libsecp256k1",
+ "multihash",
+ "rand",
+ "rand_chacha",
+ "serde",
+ "serde_tuple",
+ "wasm-builder",
+ "wasmtime",
+]
 
 [[package]]
 name = "version_check"

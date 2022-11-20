@@ -2,6 +2,7 @@
 
 members = [
     "validator",
+    "storage"
 ]
 
 [patch.crates-io]
