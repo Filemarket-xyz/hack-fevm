@@ -1,0 +1,17 @@
+version: '3.7'
+services:
+  lotus:
+    image: ghcr.io/jimpick/lotus-fvm-localnet-ready@sha256:ed4ca95df52abdbf8f2e72f43da858b31c757e9fd5776b7e014e887704edf6e8 #ghcr.io/jimpick/lotus-fvm-localnet-lite:latest
+    network_mode: "host"
+    command: "lotus daemon --lotus-make-genesis=devgen.car --genesis-template=localnet.json --bootstrap=false"
+    ports:
+      - "1234:1234"
+    volumes:
+      - ./target/debug/wbuild:/wbuild
+
+  lotus-miner:
+    image: ghcr.io/jimpick/lotus-fvm-localnet-ready@sha256:ed4ca95df52abdbf8f2e72f43da858b31c757e9fd5776b7e014e887704edf6e8 #ghcr.io/jimpick/lotus-fvm-localnet-lite:latest
+    depends_on:
+      - lotus
+    network_mode: "host"
+    command: bash -c "sleep 5; lotus-miner run --nosync"
