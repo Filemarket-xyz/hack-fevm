@@ -77,7 +77,7 @@ pub fn invoke(params: u32) -> u32 {
     let ret: Option<RawBytes> = match sdk::message::method_number() {
         1 => constructor(params),
         2 => say_hello(),
-        3 => check_word(params),
+        3 => count_matches(params),
         _ => abort!(USR_UNHANDLED_MESSAGE, "unrecognized method"),
     };
 
@@ -151,7 +151,7 @@ pub struct WordParams {
 }
 
 /// Method num3.
-pub fn check_word(params: u32) -> Option<RawBytes> {
+pub fn count_matches(params: u32) -> Option<RawBytes> {
     let params = sdk::message::params_raw(params).unwrap().1;
     let params = RawBytes::new(params);
     let params: WordParams = params.deserialize().unwrap();
