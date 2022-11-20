@@ -1,4 +1,31 @@
 # Mark3d Hack-FEVM submission
+## FVM developers important notes
+For better developer experience with FVM such tips might be useful:
+1. Working version of FVM exists at commit 1a06485a8c0463ea6a7a0604d0ad421bdcc2c953 in experimental/fvm-m2 branch of lotus repository
+2. While using local network with default parameters there is huge delay between status Active and deal creation. This can be solved with proper miner config - [reference config](./miner-config.toml)
+3. [Great entrypoint for native FVM actors which can be used to kickstart development](https://coinsbench.com/fvm-fvm-create-miner-with-smart-contract-native-actor-and-part-1-9a5d03b41c31)
+## Native actor examples
+Actor code is placed in [simple-actor](./simple-actor) directory
+
+To build it nightly mode is required:
+```shell
+rustup override set nightly
+```
+
+Build:
+```shell
+cargo build
+```
+
+File to deploy will be located at path - `simple-actor/target/debug/wbuild/simple_actor/simple_actor.compact.wasm`
+
+Deploy can be done with following instructions:
+```shell
+lotus chain install-actor ${path}
+lotus chain create-actor ${cid obtained from previous step} ${constructor params}
+```
+
+Constructor or invoke params are base64 encoded raw bytes(fvm encoding). They can obtained with [serialization helper](./serialization-helper) package.
 ## Deploy contracts
 ### Requirements
 First, you need to place your private key in file sol-contracts/.wallaby-key in hex format without 0x prefix.
