@@ -2,6 +2,7 @@ import {Button, Container, Input, Modal, NextUIProvider, Progress, Spacer, style
 import {useForm} from 'react-hook-form';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useStatusState} from './hooks/useStatusState';
+import ImageLoader from './ImageLoader/ImageLoader';
 
 const ButtonContainer = styled('div', {
   display: 'flex',
@@ -21,6 +22,7 @@ interface FormState {
 
 function App() {
   const {register, handleSubmit} = useForm<FormState>()
+  const [file, setFile] = useState<File>()
 
   const {wrapPromise, statuses: {isLoading, result, error}} = useStatusState<string>()
 
@@ -38,8 +40,14 @@ function App() {
       const searchParams = new URLSearchParams()
       searchParams.set('address', form.address)
       searchParams.set('word', form.word)
+      console.log(form, file)
       const resp = await fetch(`http://localhost:9300/api/invoke_count_matches?${searchParams}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: file ? {
+          'Content-Type': file.type,
+          'Content-Disposition': `attachment; filename="${file.name}"`,
+        } : undefined,
+        body: await file?.arrayBuffer(),
       })
       const text = await resp.text()
       if (resp.ok) {
@@ -48,7 +56,7 @@ function App() {
         throw text
       }
     })()
-  ), [wrapPromise])
+  ), [wrapPromise, file])
   return (
     <NextUIProvider>
       <Container>
@@ -58,6 +66,8 @@ function App() {
         </Text>
         <Spacer y={3.5}/>
         <form onSubmit={onSubmit}>
+          <ImageLoader onChange={setFile}/>
+          <Spacer y={2}/>
           <Input
             clearable
             bordered
