@@ -22,14 +22,14 @@ pub const NONCE: &NonceSimple = b"unique nonce";
 
 #[derive(Debug, PartialEq)]
 pub struct EncodeFileParams<'a> {
-    msg: &'a str,
-    key: &'a Secret,
+    pub msg: &'a str,
+    pub key: &'a Secret,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct DecodeFileParams<'a> {
-    ciphertext: Vec<u8>,
-    key: &'a Secret,
+    pub ciphertext: Vec<u8>,
+    pub key: &'a Secret,
 }
 
 #[derive(Debug, PartialEq)]

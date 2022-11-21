@@ -41,3 +41,30 @@ impl JsKeyPair {
         self.private.clone()
     }
 }
+
+#[wasm_bindgen]
+pub struct JsChipherKey {
+    key: [u8; 32]
+} 
+
+#[wasm_bindgen]
+impl JsChipherKey {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        console_log::init_with_level(Level::Debug).unwrap();
+
+        info!("Creating key");
+        JsChipherKey { key: hidden_file_crypto::gen_key() }
+    }
+
+    pub fn share_key(&self, pub_key: String) -> Vec<u8> {
+        hidden_file_crypto::share_secret(&self.key, &pub_key).unwrap()
+    }
+
+    pub fn encode_msg(&self, msg: String) -> Vec<u8> {
+        hidden_file_crypto::encode_msg(hidden_file_crypto::EncodeFileParams {
+            msg: &msg,
+            key: &self.key,
+        }).unwrap()
+    }
+}
