@@ -3,6 +3,8 @@ import {useForm} from 'react-hook-form';
 import {useCallback, useEffect, useMemo, useState} from 'react';
 import {useStatusState} from '../hooks/useStatusState';
 
+// import { JsKeyPair } from "hidden-file-client";
+
 export const ButtonContainer = styled('div', {
   display: 'flex',
   width: '100%',
@@ -24,6 +26,16 @@ export function TextForm() {
   const {register, handleSubmit} = useForm<FormState>()
 
   const {wrapPromise, statuses: {isLoading, result, error}} = useStatusState<string>()
+
+  // useEffect(() => {
+  //   try {
+  //     const keypair = new JsKeyPair();
+  //     console.log(keypair.private);
+  //     console.log(keypair.public); 
+  //   } catch (error) {
+  //     console.error(error)
+  //   }
+  // },[])
 
   const modalContent = useMemo(() => result || error, [result, error])
   const [modalOpen, setModalOpen] = useState(Boolean(result || error))

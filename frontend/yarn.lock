@@ -1963,6 +1963,9 @@ has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
+"hidden-file-client@file:../actors/hidden-file-client/pkg":
+  version "0.1.0"
+
 intl-messageformat@^10.1.0:
   version "10.2.1"
   resolved "https://registry.yarnpkg.com/intl-messageformat/-/intl-messageformat-10.2.1.tgz#2f5626db773c82f3038d355f56ac4736ceef362b"
@@ -2186,7 +2189,14 @@ update-browserslist-db@^1.0.9:
     escalade "^3.1.1"
     picocolors "^1.0.0"
 
-vite@^3.2.3:
+vite-plugin-wasm@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/vite-plugin-wasm/-/vite-plugin-wasm-3.1.0.tgz#44095059f3c7137b7babe6afc2f96eb4d6d6e950"
+  integrity sha512-RzqOR+zMqqNZOhplq7XM9bkFNfW/Cs1VVj7p+aAdOznCBGwxYLqqzLGxuRwTV31HOGtDGjA8nvgcZG3GwmeVZQ==
+  dependencies:
+    vite "^3"
+
+vite@^3, vite@^3.2.3:
   version "3.2.4"
   resolved "https://registry.yarnpkg.com/vite/-/vite-3.2.4.tgz#d8c7892dd4268064e04fffbe7d866207dd24166e"
   integrity sha512-Z2X6SRAffOUYTa+sLy3NQ7nlHFU100xwanq1WDwqaiFiCe+25zdxP1TfCS5ojPV2oDDcXudHIoPnI1Z/66B7Yw==
