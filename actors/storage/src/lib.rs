@@ -10,10 +10,10 @@ use fvm_ipld_encoding::tuple::{Deserialize_tuple, Serialize_tuple};
 use fvm_ipld_encoding::{to_vec, CborStore, RawBytes, DAG_CBOR};
 use fvm_sdk as sdk;
 use fvm_sdk::NO_DATA_BLOCK_ID;
-use fvm_shared::ActorID;
 use fvm_shared;
-use fvm_shared::econ::TokenAmount;
 use fvm_shared::address::Address;
+use fvm_shared::econ::TokenAmount;
+use fvm_shared::ActorID;
 
 macro_rules! abort {
     ($code:ident, $msg:literal $(, $ex:expr)*) => {
@@ -33,7 +33,7 @@ pub struct State {
     pub cost: TokenAmount,
     pub consumer_pub: Option<SalePublicKey>,
     pub ciphered_encoding_key: Option<EncriptedPassword>,
-    pub is_finished: bool
+    pub is_finished: bool,
 }
 
 impl State {
@@ -95,7 +95,7 @@ struct InitialParams {
     pub seller: Address,
     pub word: String,
     pub ciphered_file_content: EncriptedFileContent,
-    pub cost: TokenAmount
+    pub cost: TokenAmount,
 }
 
 pub fn constructor(params: u32) -> Option<RawBytes> {
@@ -117,7 +117,7 @@ pub fn constructor(params: u32) -> Option<RawBytes> {
         cost: params.cost,
         consumer_pub: None,
         ciphered_encoding_key: None,
-        is_finished: false
+        is_finished: false,
     };
 
     state.save();
@@ -126,7 +126,7 @@ pub fn constructor(params: u32) -> Option<RawBytes> {
 
 #[derive(Debug, Deserialize_tuple)]
 struct BuyParams {
-    pub consumer_pub: SalePublicKey
+    pub consumer_pub: SalePublicKey,
 }
 
 pub fn buy_file(params: u32) -> Option<RawBytes> {
@@ -144,12 +144,7 @@ pub fn buy_file(params: u32) -> Option<RawBytes> {
     let address = Address::new_id(100);
     let send_params = RawBytes::default();
 
-    let _receipt = fvm_sdk::send::send(
-        &address,
-        2,
-        send_params,
-        state.cost.clone(),
-    ).unwrap();
+    let _receipt = fvm_sdk::send::send(&address, 2, send_params, state.cost.clone()).unwrap();
 
     state.consumer_pub = Some(params.consumer_pub);
     state.consumer = Some(Address::new_id(caller));
@@ -160,7 +155,7 @@ pub fn buy_file(params: u32) -> Option<RawBytes> {
 
 #[derive(Debug, Deserialize_tuple)]
 struct ShareParams {
-    pub ciphered_encoding_key: EncriptedPassword
+    pub ciphered_encoding_key: EncriptedPassword,
 }
 
 fn share_access(params: u32) -> Option<RawBytes> {
@@ -190,12 +185,12 @@ fn share_access(params: u32) -> Option<RawBytes> {
 #[derive(Serialize_tuple, Deserialize_tuple, Clone)]
 struct WithdrawParams {
     provider_or_client: Address,
-    amount: TokenAmount
+    amount: TokenAmount,
 }
 
 #[derive(Debug, Deserialize_tuple)]
 struct ComplainParams {
-    pub user_priv_key: SalePrivateKey
+    pub user_priv_key: SalePrivateKey,
 }
 
 fn complain(params: u32) -> Option<RawBytes> {
@@ -204,7 +199,7 @@ fn complain(params: u32) -> Option<RawBytes> {
     let params = sdk::message::params_raw(params).unwrap().1;
     let params = RawBytes::new(params);
     let params: ComplainParams = params.deserialize().unwrap();
-    
+
     let encoded_password = state.ciphered_encoding_key.as_ref().unwrap();
 
     let consumer_pub = state.consumer_pub.as_ref().unwrap();
@@ -212,29 +207,25 @@ fn complain(params: u32) -> Option<RawBytes> {
         &params.user_priv_key,
         &consumer_pub,
         &encoded_password,
-        state.ciphered_file_content.clone()
+        state.ciphered_file_content.clone(),
     );
 
     if let Ok(file_content) = file_content_result {
         if file_content.contains(&state.word) {
-            return  None;
-        }   
+            return None;
+        }
     }
 
     let send_params = WithdrawParams {
         provider_or_client: state.consumer.unwrap(),
-        amount: state.cost.clone()
+        amount: state.cost.clone(),
     };
     let send_params = RawBytes::serialize(send_params).unwrap();
 
     let market_address = Address::new_id(100);
 
-    let _receipt = fvm_sdk::send::send(
-        &market_address,
-        3,
-        send_params,
-        TokenAmount::from_atto(0)
-    ).unwrap();
+    let _receipt =
+        fvm_sdk::send::send(&market_address, 3, send_params, TokenAmount::from_atto(0)).unwrap();
 
     state.is_finished = true;
 
@@ -258,18 +249,14 @@ fn finish_sale() -> Option<RawBytes> {
 
     let send_params = WithdrawParams {
         provider_or_client: state.seller,
-        amount: state.cost.clone()
+        amount: state.cost.clone(),
     };
     let send_params = RawBytes::serialize(send_params).unwrap();
 
     let market_address = Address::new_id(100);
 
-    let _receipt = fvm_sdk::send::send(
-        &market_address,
-        3,
-        send_params,
-        TokenAmount::from_atto(0)
-    ).unwrap();
+    let _receipt =
+        fvm_sdk::send::send(&market_address, 3, send_params, TokenAmount::from_atto(0)).unwrap();
 
     state.is_finished = true;
 
